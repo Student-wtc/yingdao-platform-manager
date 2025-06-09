@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影刀可视化调度神器</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active:hover {
+            background: white;
+        }
+
+        .tab-content {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(86, 171, 47, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 65, 108, 0.4);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-panel h4 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-time {
+            color: #888;
+        }
+
+        .log-status-running {
+            color: #ffd700;
+        }
+
+        .log-status-finished {
+            color: #00ff00;
+        }
+
+        .log-status-error {
+            color: #ff4444;
+        }
+
+        .params-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .param-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .param-label {
+            min-width: 150px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .param-type {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-finished {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-stopped {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .param-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .param-label {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header animate__animated animate__fadeInDown">
+            <h1><i class="fas fa-robot"></i> 影刀可视化调度神器</h1>
+            <p>现代化的RPA任务调度管理平台</p>
+        </div>
+
+        <div class="animate__animated animate__fadeInUp">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('app-schedule')">应用调度</button>
+                <button class="tab" onclick="switchTab('task-schedule')">任务调度</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- 应用调度页面 -->
+                <div id="app-schedule" class="tab-pane active">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="accountName">机器人账号</label>
+                                <input type="text" id="accountName" class="form-control" placeholder="例如：xxx@xxx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="accessKeyId">Access Key ID</label>
+                                <input type="text" id="accessKeyId" class="form-control" placeholder="在控制台获取">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="accessKeySecret">Access Key Secret</label>
+                                <input type="password" id="accessKeySecret" class="form-control" placeholder="在控制台获取">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="applicationSelect">选择应用</label>
+                        <select id="applicationSelect" class="form-control">
+                            <option value="">请先获取应用列表</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="useParams">
+                        <label for="useParams">使用流程参数</label>
+                    </div>
+
+                    <div id="paramsContainer" class="params-container" style="display: none;">
+                        <h4><i class="fas fa-cogs"></i> 流程参数配置</h4>
+                        <div id="paramsList"></div>
+                        <button type="button" class="btn btn-info" onclick="loadRobotParams()">
+                            <i class="fas fa-sync-alt"></i> 刷新参数
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button type="button" class="btn btn-primary" onclick="getToken()">
+                            <i class="fas fa-key"></i> 获取令牌
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="getApplications()">
+                            <i class="fas fa-list"></i> 刷新应用
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="startJob()" id="startJobBtn">
+                            <i class="fas fa-play"></i> 启动应用
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="stopJob()" id="stopJobBtn" disabled>
+                            <i class="fas fa-stop"></i> 停止应用
+                        </button>
+                    </div>
+
+                    <div class="status-panel">
+                        <h4><i class="fas fa-chart-line"></i> 运行状态</h4>
+                        <div id="jobStatus"></div>
+                        <div class="log-container" id="jobLogs">
+                            <div class="log-entry">等待任务启动...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 任务调度页面 -->
+                <div id="task-schedule" class="tab-pane">
+                    <div class="form-group">
+                        <label for="scheduleUuid">任务ID</label>
+                        <input type="text" id="scheduleUuid" class="form-control" placeholder="在控制台获取">
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="accessKeyIdTask">Access Key ID</label>
+                                <input type="text" id="accessKeyIdTask" class="form-control" placeholder="在控制台获取">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="accessKeySecretTask">Access Key Secret</label>
+                                <input type="password" id="accessKeySecretTask" class="form-control" placeholder="在控制台获取">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button type="button" class="btn btn-success" onclick="startSchedule()" id="startScheduleBtn">
+                            <i class="fas fa-play"></i> 启动任务
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="stopSchedule()" id="stopScheduleBtn" disabled>
+                            <i class="fas fa-stop"></i> 停止任务
+                        </button>
+                    </div>
+
+                    <div class="status-panel">
+                        <h4><i class="fas fa-chart-line"></i> 运行状态</h4>
+                        <div id="taskStatus"></div>
+                        <div class="log-container" id="taskLogs">
+                            <div class="log-entry">等待任务启动...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
